@@ -13,7 +13,7 @@ con = sqlite3.connect("proj.db")
 
 
 df = pd.read_sql_query("SELECT * from traces", con)
-
+# df_all_measurement  = pd.read_sql_query("SELECT * from measurements", con)
 
 
 

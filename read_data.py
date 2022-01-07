@@ -6,7 +6,7 @@ import json
 def get_text_measurments_patient( patient_id: int):
     return requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/'+str(patient_id)).json()
 
-patient = get_text_measurments_patient(1)
+# patient = get_text_measurments_patient(1)
 
 def grab_a_series_of_measurments():
     measurments = []
@@ -23,6 +23,12 @@ def grab_a_series_of_measurments():
             break
     return measurments,t
 
+def grab_a_serie_of_measurment():
+    measurments = []
+    stud_obj = get_text_measurments_patient(1)
+    measurments.append(stud_obj)
+    return measurments
+
 def convert_measurments_to_df(measurments:list):
     df_measurements_described = pd.DataFrame([{**measurment,**{'trace_id': measurment['trace']['id']}} for measurment in measurments for sensor in measurment['trace']['sensors']])
     df_measurements_described = df_measurements_described.drop(columns=['trace'])
@@ -32,28 +38,9 @@ def convert_measurments_to_df(measurments:list):
     df_measurements = pd.concat([df_measurements_described,df_measurements_sensors],axis=1)
     return df_measurements
 
-measurments,t = grab_a_series_of_measurments()
-df_measurements = convert_measurments_to_df(measurments)
+def grab_one_serie():
+    measurments = grab_a_serie_of_measurment()
+    df_measurements = convert_measurments_to_df(measurments)
+    return df_measurements
 
-
-
-
-
-# stud_obj = get_text_measurments_patient(1)
-# r = requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/2')
-# dict = r.json()
-
-
-
-# %%
-# measurment = measurments[0]
-
-# for measurment in measurments:
-#     print(type(measurment))
-#     for sensor in measurment['trace']['sensors']:
-#         print(sensor)
-#         # print(measurment['trace']['id'])
-#         print({'trace_id': measurment['trace']['id']})
-#         print({**measurment, **{'trace_id': measurment['trace']['id']}})
-
-df_measurements_described = pd.DataFrame([{**measurment,**{'trace_id': measurment['trace']['id']}} for measurment in measurments for sensor in measurment['trace']['sensors']])
+# df_measurement = grab_one_serie()
