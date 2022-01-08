@@ -3,6 +3,7 @@ from dash import dcc, html
 import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from PIL import Image
 import sqlite3
 
@@ -13,9 +14,23 @@ con = sqlite3.connect("proj.db")
 
 
 df = pd.read_sql_query("SELECT * from traces", con)
-# df_all_measurement  = pd.read_sql_query("SELECT * from measurements", con)
+df_all_measurement  = pd.read_sql_query("SELECT * from measurements", con)
 
-
+def plot_single_figure_six_traces_separately_for_all_foots(df_measurements,t):
+    title  = str(df_measurements['firstname'].unique() + ' ' +  df_measurements['lastname'].unique())
+    fig = make_subplots(rows=2, cols=3, start_cell="bottom-left",shared_xaxes = True,shared_yaxes= True, subplot_titles = df_measurements['name'].unique(),x_title= 'time',y_title='value')
+    for i in range(6):
+        fig.add_trace(go.Scatter(x=t,y=df_measurements[df_measurements['id_sensor'] == i]['value'],showlegend=False),
+                row= int(i/3)+1, col=  (i % 3)+1)
+    fig.update_layout(
+    title={
+        'text': title[2:-2],
+        'y':0.9,
+        'x':0.5,
+        'xanchor': 'center',
+        'yanchor': 'top'})
+    # fig.show()
+    return fig
 
 time = df['time']
 
@@ -25,6 +40,9 @@ df1=df1.drop('time',axis=1)
 
 a=[df['L0_val'].mean(),df['L1_val'].mean(),df['L2_val'].mean(),df['R0_val'].mean(),df['R1_val'].mean(),df['R2_val'].mean()]
 current_value =  [df['L0_val'].iloc[-1],df['L1_val'].iloc[-1],df['L2_val'].iloc[-1],df['R0_val'].iloc[-1],df['R1_val'].iloc[-1],df['R2_val'].iloc[-1]]
+
+# normalized_df=(df1-df1.min())/(df1.max()-df1.min())
+
 
 amin, amax = min(a), max(a)
 for i, val in enumerate(a):
