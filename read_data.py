@@ -44,6 +44,7 @@ def grab_one_serie_for_all_person():
         measurments = grab_a_serie_of_measurment(id)
         if id == 1:
             df_measurements = convert_measurments_to_df(measurments)
+
         else:
             df_measurements = df_measurements.append(convert_measurments_to_df(measurments), ignore_index=True)
     return df_measurements
@@ -52,6 +53,15 @@ def grab_one_serie(id):
     measurments = grab_a_serie_of_measurment(id)
     df_measurements = convert_measurments_to_df(measurments)
     return df_measurements
-
-# df_measurement = grab_one_serie()
-
+# %%
+# import time
+#
+# start = time.time()
+# df_measurement = grab_one_serie_for_all_person()
+# # print(time.time() - start)
+#
+# df_measurement_1 = grab_one_serie_for_all_person()
+# trace_1 = df_measurement['trace_id'].unique()
+# trace_2 = df_measurement_1['trace_id'].unique()
+# serie_1 = df_measurement.iloc[1,-1]
+# serie_2 = df_measurement_1.iloc[1,-1]

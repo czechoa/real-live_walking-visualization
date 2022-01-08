@@ -23,32 +23,20 @@ sql = ''' INSERT INTO traces(name, L0_val, L1_val, L2_val, R0_val,R1_val,R2_val,
 while True:
     dt = requests.get(url)
     dt=dt.json()
-    task=(dt["firstname"]+' '+dt["lastname"],dt["trace"]["sensors"][0]["value"],dt["trace"]["sensors"][1]["value"],dt["trace"]["sensors"][2]["value"]
-     ,dt["trace"]["sensors"][3]["value"],dt["trace"]["sensors"][4]["value"],dt["trace"]["sensors"][5]["value"],time())
-    cur.execute(sql, task)
-    conn.commit()
-    measurements = grab_one_serie_for_all_person()
+    # task=(dt["firstname"]+' '+dt["lastname"],dt["trace"]["sensors"][0]["value"],dt["trace"]["sensors"][1]["value"],dt["trace"]["sensors"][2]["value"]
+    #  ,dt["trace"]["sensors"][3]["value"],dt["trace"]["sensors"][4]["value"],dt["trace"]["sensors"][5]["value"],time())
+    # cur.execute(sql, task)
+    # conn.commit()
+
+
+    # measurements = grab_one_serie_for_all_person() # time of that is 0.7 secunds, it too long
+
+    # start = time()
+    measurements = grab_one_serie(1) # one person
     measurements.to_sql('measurements', con=conn, if_exists='append')
+    # stop = time()
+    # print(start - stop)    # this procedure take   -0.17148542404174805 for me it to long
 
-    sleep(0.1)
-    print(task)
+    # sleep(0.1)
+    # print(task)
 
-# %%
-# import dash
-from dash import dcc, html
-import plotly.express as px
-import pandas as pd
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import sqlite3
-
-# app = dash.Dash(__name__)
-
-con = sqlite3.connect("proj.db")
-
-
-
-df = pd.read_sql_query("SELECT * from traces", con)
-df_all_measurement  = pd.read_sql_query("SELECT * from measurements", con)
-
-df_measurement_one_person =  df_all_measurement[df_all_measurement['lastname'] == 'Grzegorczyk']

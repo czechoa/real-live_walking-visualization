@@ -14,13 +14,13 @@ con = sqlite3.connect("proj.db")
 
 
 df = pd.read_sql_query("SELECT * from traces", con)
-df_all_measurement  = pd.read_sql_query("SELECT * from measurements", con)
+df_all_measurement  = pd.read_sql_query("SELECT * from measurements", con) # this moment it is one person
 
-def plot_single_figure_six_traces_separately_for_all_foots(df_measurements,t):
+def plot_single_figure_six_traces_separately_for_all_foots(df_measurements):
     title  = str(df_measurements['firstname'].unique() + ' ' +  df_measurements['lastname'].unique())
     fig = make_subplots(rows=2, cols=3, start_cell="bottom-left",shared_xaxes = True,shared_yaxes= True, subplot_titles = df_measurements['name'].unique(),x_title= 'time',y_title='value')
     for i in range(6):
-        fig.add_trace(go.Scatter(x=t,y=df_measurements[df_measurements['id_sensor'] == i]['value'],showlegend=False),
+        fig.add_trace(go.Scatter(y=df_measurements[df_measurements['id_sensor'] == i]['value'],showlegend=False),
                 row= int(i/3)+1, col=  (i % 3)+1)
     fig.update_layout(
     title={
@@ -194,10 +194,16 @@ app.layout = html.Div(children=[
         # value=time[-1],
         value=1,
 
+
         # marks={
     #     time[0]: {'label': time[0], 'style': {'color': '#77b0b1'}},
     #     time[-1]: {'label': time[-1], 'style': {'color': '#f50'}}
     #     }
+    ),
+    dcc.Graph(
+        id='graph6',
+        figure=plot_single_figure_six_traces_separately_for_all_foots(df_all_measurement[df_all_measurement['lastname'] == 'Grzegorczyk']),
+        # style={'width': '180vh', 'height': '180vh'}
     ),
     html.Div(id='slider-output-container')
 ])
