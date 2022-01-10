@@ -13,6 +13,7 @@ cur = conn.cursor()
 
 
 cur.execute("CREATE TABLE IF NOT EXISTS traces(name varchar(10), L0_val int, L1_val int, L2_val int, R0_val int,R1_val int,R2_val int,time int)")
+
 cur.execute("DROP TABLE IF EXISTS measurements")
 
 sql = ''' INSERT INTO traces(name, L0_val, L1_val, L2_val, R0_val,R1_val,R2_val,time)
