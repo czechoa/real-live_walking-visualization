@@ -56,6 +56,13 @@ person_measurements = get_prepared_measurements()
 min_time = min(person_measurements['time'])
 max_time = max(person_measurements['time'])
 
+Start = False
+slider_left = min_time
+slider_middle = (max_time - min_time)/2
+slider_right = max_time
+
+
+
 img = Image.open('stopki.png')
 
 fig_foot = go.Figure(data=[go.Scatter(
@@ -83,8 +90,8 @@ fig_foot.add_layout_image(
 
 fig_foot.update_layout(
     template="plotly_white",
-    # title="current values")
 )
+
 app = dash.Dash(__name__)
 
 app.layout = html.Div(children=[
@@ -93,44 +100,16 @@ app.layout = html.Div(children=[
     html.Div(children='Andrzej Czechowki, Karol Kociołek', style={'textAlign': 'center'}),
 
     html.H1(children='Patterns:'),
-    html.H1(children='co to wgl znaczy wzor chodzenia, nwm jakas prenetacja stopek tu pewnie bedzie'),
+    html.H1(children='Person'),
 
-    html.H1(children='Speed'),
-    dcc.Slider(
-        id='speed-slider',
-        min=0,
-        max=2,
-        step=0.1,
-        value=1,
+    dcc.Dropdown(
+        id='dropdown',
+        # options=[{'label': i, 'value': i} for i in df['category'].unique()],
+        options=[{'label': "Grzegorczyk", 'value': "Grzegorczyk"} ],
+
+        value='Grzegorczyk'
     ),
-
-    html.H1(children='Time'),
-    dcc.Slider(
-        id='time-slider',
-        min=0,
-        max=10,
-        step=1,
-        value=1,
-
-    ),
-    html.H1(children='delta-time'),
-
-    dcc.Slider(
-        id='delta-time-slider',
-        min=0,
-        max=5,
-        step=0.1,
-        # value=time[-1],
-        value=1,
-
-        marks={
-            0: '0',
-            1: '1',
-
-            5: '2',
-            10: '10',
-        }
-    ),
+    # html.H1(children='co to wgl znaczy wzor chodzenia, nwm jakas prenetacja stopek tu pewnie bedzie'),
 
     dcc.Graph(
         id='scanner_history_foot',
@@ -156,7 +135,7 @@ app.layout = html.Div(children=[
             id='range-slider',
             min=min_time, max=max_time, step=0.001,
             marks={min_time: str(min_time), max_time: str(max_time)},
-            value=[min_time, (max_time - min_time)/2 , max_time],
+            value=[slider_left, slider_middle , slider_right],
             allowCross=False,
             tooltip={"placement": "bottom", "always_visible": True},
 
@@ -172,23 +151,30 @@ app.layout = html.Div(children=[
     )
 ])
 
+
 # @app.callback(
-#     Output('range-slider', 'value'),
-#     [
-#         Input('scanner_history_foot', 'hoverData'),
-#         Input('range-slider', 'value')
-#     ])
-# def update_foot_image(hoverData,value):
-#     # time = hoverData['points']['x']
-#     time = hoverData['points'][0]['x']
-#     return [value[0],time,value[-1]]
+#     Input('button_start', 'n_clicks'),
+# )
+# def update_output(n_clicks):
+#     global start
+#     start = True
 #
+# @app.callback(
+#     Input('button_start', 'n_clicks'),
+# )
+# def update_output(n_clicks):
+#     global start
+#     start = False
 
 @app.callback(
     Output("scanner_history_foot", "figure"),
     [Input("range-slider", "value")])
 def update_bar_chart(slider_range):
     low,current, high = slider_range
+
+    global  slider_left,slider_middle,slider_right
+
+    slider_left,slider_middle,slider_right  = slider_range
 
     delta = 0.01
 
@@ -220,6 +206,8 @@ def update_bar_chart(slider_range):
 
     return fig
 
+
+
 @app.callback(
     [
     Output('graph_foot', 'figure'),
@@ -229,8 +217,12 @@ def update_bar_chart(slider_range):
         Input('scanner_history_foot', 'hoverData'),
     ])
 def update_foot_image(hoverData):
+    global slider_middle
 
     time = hoverData['points'][0]['x']
+    slider_middle = time
+
+
     fig_foot = go.Figure(data=[go.Scatter(
         x=[3.5, 1, 3, 6.5, 9, 7],
         y=[7, 6, 1.5, 7, 6, 1.5],
@@ -255,11 +247,9 @@ def update_foot_image(hoverData):
     )
     fig_foot.update_layout(
         template="plotly_white",
-        # title="select values"
     )
 
-    return fig_foot, [0,time,1] # to do  ( change 0 and 1 to truly value of range-slider
-
+    return fig_foot, [slider_left,time,slider_right] # to do  ( change 0 and 1 to truly value of range-slider)
 
 
 if __name__ == '__main__':
