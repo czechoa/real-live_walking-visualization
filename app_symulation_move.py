@@ -5,9 +5,9 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from PIL import Image
 
-from prepared_measurements_and_starts_fig import get_prepared_measurements, \
-    plot_single_figure_six_traces_separately_for_all_foots, \
-    create_fig_quartiles, create_fig_foot
+from prepared_measurements import get_prepared_measurements
+
+from create_fig import create_fig_foot,create_fig_quartiles,plot_single_figure_six_traces_separately_for_all_foots
 
 # global valous (to do move to json, for share data )
 person_measurements = get_prepared_measurements()
