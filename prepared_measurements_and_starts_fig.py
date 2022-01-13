@@ -5,8 +5,10 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.express as px
 
+
 def normalised_column_value(df):
     return df['value'] / max(df['value']) * 100
+
 
 def get_prepared_measurements():
     con = sqlite3.connect("proj.db")
@@ -26,16 +28,28 @@ def get_prepared_measurements():
     return person_measurements
 
 
-
-
-def plot_single_figure_six_traces_separately_for_all_foots(df_measurements):
+def plot_single_figure_six_traces_separately_for_all_foots(df_measurements, current, delta):
     title = str(df_measurements['firstname'].unique() + ' ' + df_measurements['lastname'].unique())
 
     fig = make_subplots(rows=2, cols=3, start_cell="bottom-left", shared_xaxes=True, shared_yaxes=True,
                         subplot_titles=df_measurements['name'].unique(), x_title='time', y_title='value')
 
     for i in range(6):
-        fig.add_trace(go.Scatter(y=df_measurements[df_measurements['id_sensor'] == i]['value'], showlegend=False),
+        point = \
+            df_measurements[
+                ((df_measurements['time'] > (current - delta)) & (df_measurements['time'] < (current + delta))) & (
+                        df_measurements['id_sensor'] == i)].iloc[
+                -1]
+        fig.add_trace(go.Scatter(x=df_measurements[df_measurements['id_sensor'] == i]['time'],
+                                 y=df_measurements[df_measurements['id_sensor'] == i]['value'],
+                                 showlegend=False, mode='lines'),
+                      row=int(i / 3) + 1, col=(i % 3) + 1)
+
+        # fig.add_trace(go.Scatter(x= y=df_measurements[df_measurements['id_sensor'] == i]['value'], showlegend=False),
+        #               row=int(i / 3) + 1, col=(i % 3) + 1)
+
+        fig.add_trace(go.Scatter(x=[point['time']], y=[point['value']],
+                                 showlegend=False, mode='markers'),
                       row=int(i / 3) + 1, col=(i % 3) + 1)
 
     fig.update_layout(
@@ -48,6 +62,7 @@ def plot_single_figure_six_traces_separately_for_all_foots(df_measurements):
 
     return fig
 
+
 def create_fig_quartiles(person_measurements: pd.DataFrame):
     fig_quartiles = px.box(
         {'sensor_' + str(i): person_measurements[person_measurements['name'] == i]['value'].values for i in
@@ -57,20 +72,6 @@ def create_fig_quartiles(person_measurements: pd.DataFrame):
 
     return fig_quartiles
 
-# def layout_image_dict():
-#     img = Image.open('stopki.png')
-#
-#     return  dict(
-#             source=img,
-#             xref="x",
-#             yref="y",
-#             x=0,
-#             y=10,
-#             sizex=10,
-#             sizey=10,
-#             sizing="stretch",
-#             opacity=0.5,
-#             layer="below")
 
 def create_fig_foot(marker_size):
     img = Image.open('stopki.png')
@@ -101,4 +102,3 @@ def create_fig_foot(marker_size):
         template="plotly_white",
     )
     return fig_foot
-

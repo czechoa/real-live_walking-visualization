@@ -43,7 +43,7 @@ app.layout = html.Div(children=[
     ),
     dcc.Graph(
         id='scanner_history_foot',
-        figure=plot_single_figure_six_traces_separately_for_all_foots(person_measurements),
+        figure=plot_single_figure_six_traces_separately_for_all_foots(person_measurements, slider_middle, delta),
 
     ),
     html.Div([
@@ -149,44 +149,16 @@ def update_output(value):
 @app.callback(
     Output("scanner_history_foot", "figure"),
     [Input("range-slider", "value")])
-def update_bar_chart(slider_range):
+def update_middle_slider(slider_range):
     low, current, high = slider_range
 
     global slider_left, slider_middle, slider_right
 
     slider_left, slider_middle, slider_right = slider_range
 
-    print("slider in range-slider",slider_middle)
-    delta = 0.01
-
     mask = person_measurements[(person_measurements['time'] > low) & (person_measurements['time'] < high)]
 
-    title = str(person_measurements['firstname'].unique() + ' ' + person_measurements['lastname'].unique())
-
-    fig = make_subplots(rows=2, cols=3, start_cell="bottom-left", shared_xaxes=True, shared_yaxes=True,
-                        subplot_titles=person_measurements['name'].unique(), x_title='time', y_title='value')
-
-    for i in range(6):
-        point = \
-            mask[((mask['time'] > (current - delta)) & (mask['time'] < (current + delta))) & (
-                    mask['id_sensor'] == i)].iloc[
-                -1]
-
-        fig.add_trace(go.Scatter(x=mask[mask['id_sensor'] == i]['time'], y=mask[mask['id_sensor'] == i]['value'],
-                                 showlegend=False, mode='lines'),
-                      row=int(i / 3) + 1, col=(i % 3) + 1)
-
-        fig.add_trace(go.Scatter(x=[point['time']], y=[point['value']],
-                                 showlegend=False, mode='markers'),
-                      row=int(i / 3) + 1, col=(i % 3) + 1)
-
-    fig.update_layout(
-        title={
-            'text': title[2:-2],
-            'y': 0.9,
-            'x': 0.5,
-            'xanchor': 'center',
-            'yanchor': 'top'})
+    fig = plot_single_figure_six_traces_separately_for_all_foots(mask, current, delta)
 
     return fig
 
@@ -200,11 +172,9 @@ def update_bar_chart(slider_range):
         Input('scanner_history_foot', 'hoverData'),
         Input('interval-component', 'n_intervals')
     ])
-
 def update_foot_image(hoverData, current_intervals):
     global slider_middle
     global n_intervals
-    print(current_intervals,n_intervals)
     if current_intervals != n_intervals:
         slider_middle += 0.1
         n_intervals = current_intervals
@@ -216,10 +186,8 @@ def update_foot_image(hoverData, current_intervals):
         except:
             pass
 
-    print("slider",slider_middle)
     # maybe should be here delta time
     time = slider_middle
-    print('new \n',person_measurements[person_measurements['time'] == time].iloc[:, -1])
 
     fig_foot = create_fig_foot(person_measurements[person_measurements['time'] == time].iloc[:, -1].values)
 
