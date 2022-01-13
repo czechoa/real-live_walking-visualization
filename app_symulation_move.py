@@ -1,5 +1,5 @@
 import dash
-from dash import dcc, html, Output, Input
+from dash import dcc, html, Output, Input, dash_table
 import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
@@ -7,6 +7,9 @@ from plotly.subplots import make_subplots
 from PIL import Image
 import sqlite3
 
+# tabelke z anomaliami
+# wartosci srednie (dwa wykresy )
+# powinno byc git
 
 def normalised_column_value(df):
     return df['value'] / max(df['value']) * 100
@@ -52,7 +55,7 @@ def get_prepared_measurements():
 
 
 person_measurements = get_prepared_measurements()
-
+anomaly = person_measurements[person_measurements['anomaly'] == 1]
 min_time = min(person_measurements['time'])
 max_time = max(person_measurements['time'])
 step = 0.001
@@ -89,7 +92,12 @@ fig_foot.add_layout_image(
 fig_foot.update_layout(
     template="plotly_white",
 )
+# tmp = {'sentor_'+str(i): person_measurements[person_measurements['name'] == i]['value'].values for i in person_measurements['name'].unique()}
+# box  = pd.DataFrame({'sentor_'+str(i): person_measurements[person_measurements['name'] == i]['value'].values for i in person_measurements['name'].unique()})
 
+fig_quartiles = px.box({'sensor_'+str(i): person_measurements[person_measurements['name'] == i]['value'].values for i in person_measurements['name'].unique()})
+fig_quartiles.update_layout(
+    title="Quartiles")
 app = dash.Dash(__name__)
 
 app.layout = html.Div(children=[
@@ -118,8 +126,15 @@ app.layout = html.Div(children=[
         dcc.Graph(
             id='graph_foot',
             figure=fig_foot,
-            style={'width': '90vh', 'height': '90vh'}
+            style={'width': '90vh', 'height': '70vh'}
         ),
+        'mean value',
+        dcc.Graph(
+            id='graph_foot_mean',
+            figure=fig_foot,
+            style={'width': '90vh', 'height': '70vh'}
+        ),
+
     ],
         style={'width': '48%', 'float': 'left', 'display': 'inline-block'}
 
@@ -154,17 +169,47 @@ app.layout = html.Div(children=[
 
             pushable=0.01
         ),
+"Anomaly table",
+        dash_table.DataTable(
+            id='datatable-paging-page-count',
+            columns=[
+                {"name": i, "id": i} for i in person_measurements.columns
+            ],
+            page_current=0,
+            page_size=6,
+            page_action='custom',
+            page_count=int(len(anomaly) / 6),
+            style_table={'width': '90vh', 'height': '40vh'}
+        ),
+        dcc.Graph(
+            id='quartiles',
+            figure=fig_quartiles,
+            style={'width': '90vh', 'height': '60vh'}
+        ),
+
     ],
         style={'width': '48%', 'float': 'right', 'display': 'inline-block'}
     ),
+    #
+
+
     dcc.Interval(
         id='interval-component',
         interval=1 * 1000,  # in milliseconds
         n_intervals=0,
         disabled=True
-    )
+    ),
 ])
 
+
+@app.callback(
+    Output('datatable-paging-page-count', 'data'),
+    Input('datatable-paging-page-count', "page_current"),
+    Input('datatable-paging-page-count', "page_size"))
+def update_table(page_current, page_size):
+    return anomaly.iloc[
+           page_current * page_size:(page_current + 1) * page_size
+           ].to_dict('records')
 
 @app.callback(
     Output('interval-component', 'disabled'),
