@@ -1,6 +1,5 @@
 import dash
 from dash import dcc, html, Output, Input, dash_table
-import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -12,6 +11,7 @@ from prepared_measurements_and_starts_fig import get_prepared_measurements, \
 
 # global valous (to do move to json, for share data )
 person_measurements = get_prepared_measurements()
+
 anomaly = person_measurements[person_measurements['anomaly'] == 1]
 min_time = min(person_measurements['time'])
 max_time = max(person_measurements['time'])
@@ -147,7 +147,7 @@ def update_output(value):
 
 
 @app.callback(
-    [Output("scanner_history_foot", "figure")],
+    Output("scanner_history_foot", "figure"),
     [Input("range-slider", "value")])
 def update_bar_chart(slider_range):
     low, current, high = slider_range
@@ -156,6 +156,7 @@ def update_bar_chart(slider_range):
 
     slider_left, slider_middle, slider_right = slider_range
 
+    print("slider in range-slider",slider_middle)
     delta = 0.01
 
     mask = person_measurements[(person_measurements['time'] > low) & (person_measurements['time'] < high)]
@@ -193,20 +194,17 @@ def update_bar_chart(slider_range):
 @app.callback(
     [
         Output('graph_foot', 'figure'),
-        Output('graph_foot_mean', 'figure'),
         Output('range-slider', 'value'),
     ],
     [
         Input('scanner_history_foot', 'hoverData'),
         Input('interval-component', 'n_intervals')
     ])
+
 def update_foot_image(hoverData, current_intervals):
     global slider_middle
     global n_intervals
-
-    print(current_intervals)
-    print(n_intervals)
-
+    print(current_intervals,n_intervals)
     if current_intervals != n_intervals:
         slider_middle += 0.1
         n_intervals = current_intervals
@@ -217,34 +215,13 @@ def update_foot_image(hoverData, current_intervals):
             slider_middle = hoverData['points'][0]['x']
         except:
             pass
+
+    print("slider",slider_middle)
     # maybe should be here delta time
     time = slider_middle
+    print('new \n',person_measurements[person_measurements['time'] == time].iloc[:, -1])
 
-    fig_foot = go.Figure(data=[go.Scatter(
-        x=[3.5, 1, 3, 6.5, 9, 7],
-        y=[7, 6, 1.5, 7, 6, 1.5],
-        mode='markers',
-        marker_size=person_measurements[person_measurements['time'] == time].iloc[:, -1]
-    )],
-    )
-
-    fig_foot.add_layout_image(
-        dict(
-            source=img,
-            xref="x",
-            yref="y",
-            x=0,
-            y=10,
-            sizex=10,
-            sizey=10,
-            sizing="stretch",
-            opacity=0.5,
-            layer="below"),
-
-    )
-    fig_foot.update_layout(
-        template="plotly_white",
-    )
+    fig_foot = create_fig_foot(person_measurements[person_measurements['time'] == time].iloc[:, -1].values)
 
     return fig_foot, [slider_left, time, slider_right]
 
