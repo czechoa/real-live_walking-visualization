@@ -1,8 +1,6 @@
 import dash
 from dash import dcc, html, Output, Input, dash_table
-import pandas as pd
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+
 from PIL import Image
 
 from prepared_measurements import get_prepared_measurements
@@ -147,7 +145,10 @@ def update_output(value):
 
 
 @app.callback(
+    [
     Output("scanner_history_foot", "figure"),
+     Output('graph_foot_mean', 'figure'),
+     ],
     [Input("range-slider", "value")])
 def update_middle_slider(slider_range):
     low, current, high = slider_range
@@ -160,7 +161,9 @@ def update_middle_slider(slider_range):
 
     fig = plot_single_figure_six_traces_separately_for_all_foots(mask, current, delta)
 
-    return fig
+    fig_foot_mean = create_fig_foot(mask['value'].mean())
+
+    return fig,fig_foot_mean
 
 
 @app.callback(
