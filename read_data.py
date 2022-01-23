@@ -6,22 +6,11 @@ import json
 def get_text_measurments_patient( patient_id: int):
     return requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/'+str(patient_id)).json()
 
-patient = get_text_measurments_patient(1)
-
-def grab_a_series_of_measurments():
+def grab_a_serie_of_measurment(id):
     measurments = []
-    start = time.time()
-    t = []
-    while True:
-        stud_obj = get_text_measurments_patient(1)
-        measurments.append(stud_obj)
-        time.sleep(0.1)
-        current = time.time()
-        elapsed_time = current - start
-        t.append(elapsed_time)
-        if elapsed_time > 5: # 300 = 5 min
-            break
-    return measurments,t
+    stud_obj = get_text_measurments_patient(id)
+    measurments.append(stud_obj)
+    return measurments
 
 def convert_measurments_to_df(measurments:list):
     df_measurements_described = pd.DataFrame([{**measurment,**{'trace_id': measurment['trace']['id']}} for measurment in measurments for sensor in measurment['trace']['sensors']])
@@ -30,30 +19,38 @@ def convert_measurments_to_df(measurments:list):
     df_measurements_sensors = pd.DataFrame([sensor for measurment in measurments for sensor in measurment['trace']['sensors']])
     df_measurements_sensors = df_measurements_sensors.rename(columns={'id':'id_sensor'})
     df_measurements = pd.concat([df_measurements_described,df_measurements_sensors],axis=1)
+
+    df_measurements.insert(0,'time',add_current_time())
+
     return df_measurements
 
-measurments,t = grab_a_series_of_measurments()
-df_measurements = convert_measurments_to_df(measurments)
+def add_current_time():
+    return time.time()
 
+def grab_one_serie_for_all_person():
+    df_measurements = pd.DataFrame()
+    for id in range(1,7):
+        measurments = grab_a_serie_of_measurment(id)
+        if id == 1:
+            df_measurements = convert_measurments_to_df(measurments)
 
+        else:
+            df_measurements = df_measurements.append(convert_measurments_to_df(measurments), ignore_index=True)
+    return df_measurements
 
-
-
-# stud_obj = get_text_measurments_patient(1)
-# r = requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/2')
-# dict = r.json()
-
-
-
+def grab_one_serie(id):
+    measurments = grab_a_serie_of_measurment(id)
+    df_measurements = convert_measurments_to_df(measurments)
+    return df_measurements
 # %%
-# measurment = measurments[0]
-
-# for measurment in measurments:
-#     print(type(measurment))
-#     for sensor in measurment['trace']['sensors']:
-#         print(sensor)
-#         # print(measurment['trace']['id'])
-#         print({'trace_id': measurment['trace']['id']})
-#         print({**measurment, **{'trace_id': measurment['trace']['id']}})
-
-df_measurements_described = pd.DataFrame([{**measurment,**{'trace_id': measurment['trace']['id']}} for measurment in measurments for sensor in measurment['trace']['sensors']])
+# import time
+#
+# start = time.time()
+# df_measurement = grab_one_serie_for_all_person()
+# # print(time.time() - start)
+#
+# df_measurement_1 = grab_one_serie_for_all_person()
+# trace_1 = df_measurement['trace_id'].unique()
+# trace_2 = df_measurement_1['trace_id'].unique()
+# serie_1 = df_measurement.iloc[1,-1]
+# serie_2 = df_measurement_1.iloc[1,-1]
