@@ -25,11 +25,10 @@ img = Image.open('stopki.png')
 app = dash.Dash(__name__)
 
 app.layout = html.Div(children=[
-    html.H1(children='Wizualizcja stopek', style={'textAlign': 'center'}),
+    html.H1(children='Foot visualization', style={'textAlign': 'center'}),
 
     html.Div(children='Andrzej Czechowki, Karol Kociołek', style={'textAlign': 'center'}),
 
-    html.H1(children='Patterns:'),
     html.H1(children='Person'),
 
     dcc.Dropdown(
@@ -101,7 +100,7 @@ app.layout = html.Div(children=[
             page_size=6,
             page_action='custom',
             page_count=int(len(anomaly) / 6),
-            style_table={'width': '90vh', 'height': '40vh'}
+            style_table={'width': '90vh', 'height': '50vh'}
         ),
         dcc.Graph(
             id='quartiles',
@@ -184,10 +183,11 @@ def update_foot_image(hoverData, current_intervals):
         if slider_middle > slider_right:
             slider_middle -= 0.1
     else:
-        try:
+        # try:
+        if hoverData is not None:
             slider_middle = hoverData['points'][0]['x']
-        except:
-            pass
+        # except:
+        #     pass
 
     # maybe should be here delta time
     time = slider_middle

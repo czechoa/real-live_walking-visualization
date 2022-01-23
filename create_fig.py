@@ -29,13 +29,13 @@ def plot_single_figure_six_traces_separately_for_all_foots(df_measurements, curr
                                  showlegend=False, mode='markers'),
                       row=int(i / 3) + 1, col=(i % 3) + 1)
 
-    fig.update_layout(
-        title={
-            'text': title[2:-2],
-            'y': 0.9,
-            'x': 0.5,
-            'xanchor': 'center',
-            'yanchor': 'top'})
+    # fig.update_layout(
+    #     title={
+    #         'text': title[2:-2],
+    #         'y': 0.9,
+    #         'x': 0.5,
+    #         'xanchor': 'center',
+    #         'yanchor': 'top'})
 
     return fig
 
