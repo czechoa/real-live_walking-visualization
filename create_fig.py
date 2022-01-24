@@ -77,5 +77,10 @@ def create_fig_foot(marker_size):
 
     fig_foot.update_layout(
         template="plotly_white",
+
     )
+
+    fig_foot.update_xaxes(range=[0, 10])
+    fig_foot.update_yaxes(range=[0, 10])
+
     return fig_foot

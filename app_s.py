@@ -26,9 +26,11 @@ min_time = min(person_measurements['time'])
 max_time = max(person_measurements['time'])
 step = 0.001
 delta = 0.01
+
 slider_left = min_time
 slider_middle = (max_time - min_time) / 2
 slider_right = max_time
+
 n_intervals = 0
 
 url = "http://tesla.iem.pw.edu.pl:9080/v2/monitor/2"
@@ -200,6 +202,7 @@ def update_middle_slider(slider_range,value):
     global slider_left, slider_middle, slider_right
 
     slider_left, slider_middle, slider_right = slider_range
+
     mask=person_measurements[person_measurements['name_val'] == value]
 
     mask = mask[(mask['time'] > low) & (mask['time'] < high)]
@@ -224,10 +227,10 @@ def update_foot_image(hoverData, current_intervals,value):
     global slider_middle
     global n_intervals
     if current_intervals != n_intervals:
-        slider_middle += 0.1
+        slider_middle += delta
         n_intervals = current_intervals
         if slider_middle > slider_right:
-            slider_middle -= 0.1
+            slider_middle -= delta
     else:
         try:
             slider_middle = hoverData['points'][0]['x']
@@ -237,6 +240,7 @@ def update_foot_image(hoverData, current_intervals,value):
     # maybe should be here delta time
     time = slider_middle
 
+    
     dt = requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/' + str(value)).json()
     marker = [dt["trace"]["sensors"][0]["value"] / 1023 * 100, dt["trace"]["sensors"][1]["value"] / 1023 * 100,
               dt["trace"]["sensors"][2]["value"] / 1023 * 100, dt["trace"]["sensors"][3]["value"] / 1023 * 100,
