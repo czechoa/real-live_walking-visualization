@@ -15,10 +15,11 @@ from prepared_measurements import get_prepared_measurements
 from create_fig import create_fig_foot,create_fig_quartiles,plot_single_figure_six_traces_separately_for_all_foots
 
 # global valous (to do move to json, for share data )
-person_measurements = get_prepared_measurements()
+measurements_all = get_prepared_measurements()
+current_person = 1
+person_measurements = measurements_all
 
-
-anomaly = person_measurements[person_measurements['name_val'] == 1]
+anomaly = person_measurements[person_measurements['name_val'] == current_person]
 anomaly = anomaly[anomaly['anomaly'] == 1]
 
 
@@ -33,11 +34,10 @@ slider_right = max_time
 
 n_intervals = 0
 
-url = "http://tesla.iem.pw.edu.pl:9080/v2/monitor/2"
-dt = requests.get(url)
-dt = dt.json()
-marker = [dt["trace"]["sensors"][0]["value"]/1023*100, dt["trace"]["sensors"][1]["value"]/1023*100, dt["trace"]["sensors"][2]["value"]/1023*100, dt["trace"]["sensors"][3]["value"]/1023*100, dt["trace"]["sensors"][4]["value"]/1023*100, dt["trace"]["sensors"][5]["value"]/1023*100]
-
+# url = "http://tesla.iem.pw.edu.pl:9080/v2/monitor/2"
+# dt = requests.get(url)
+# dt = dt.json()
+# marker = [dt["trace"]["sensors"][0]["value"]/1023*100, dt["trace"]["sensors"][1]["value"]/1023*100, dt["trace"]["sensors"][2]["value"]/1023*100, dt["trace"]["sensors"][3]["value"]/1023*100, dt["trace"]["sensors"][4]["value"]/1023*100, dt["trace"]["sensors"][5]["value"]/1023*100]
 
 
 img = Image.open('stopki.png')
@@ -107,10 +107,9 @@ app.layout = html.Div(children=[
         'Speed simulations',
         dcc.Dropdown(
             id='speed',
-            # options=[{'label': i, 'value': i} for i in df['category'].unique()],
             options=[{'label': str(i / 10), 'value': str(i / 10)} for i in range(11)],
 
-            value='0.0'
+            value='1.0'
         ),
 
         html.P("Time:"),
@@ -122,7 +121,7 @@ app.layout = html.Div(children=[
             allowCross=False,
             tooltip={"placement": "bottom", "always_visible": True},
 
-            pushable=0.01
+            pushable= delta
         ),
         "Anomaly table",
         dash_table.DataTable(
@@ -138,7 +137,7 @@ app.layout = html.Div(children=[
         ),
         dcc.Graph(
             id='quartiles',
-            figure=create_fig_quartiles(person_measurements),
+            figure=create_fig_quartiles(measurements_all),
             style={'width': '90vh', 'height': '60vh'}
         ),
 
@@ -160,21 +159,38 @@ app.layout = html.Div(children=[
     Output('datatable-paging-page-count', 'data'),
     Input('datatable-paging-page-count', "page_current"),
     Input('datatable-paging-page-count', "page_size"),
-    Input('dropdown', 'value'))
+    Input('dropdown', 'value')
+)
 def update_table(page_current, page_size,value):
-    anomaly=person_measurements[person_measurements['name_val'] == value]
+    global current_person
+    global person_measurements
+
+    current_person = value
+    person_measurements = measurements_all[measurements_all['name_val'] == value]
+
+    anomaly = person_measurements[person_measurements['name_val'] == value]
     anomaly = anomaly[anomaly['anomaly'] == 1]
+
     return anomaly.iloc[
            page_current * page_size:(page_current + 1) * page_size
            ].to_dict('records')
 
-@app.callback(
-    Output('quartiles','figure'),
-    Input('dropdown', 'value'))
-def update_table(value):
-    anomaly=person_measurements[person_measurements['name_val'] == value]
-    figure = create_fig_quartiles(anomaly)
-    return figure
+
+# @app.callback(
+#     Output('quartiles','figure'),
+#     Input('dropdown', 'value')
+# )
+# def update_table(value):
+#
+#     global current_person
+#     global person_measurements
+#
+#     current_person = value
+#     person_measurements = measurements_all[measurements_all['name_val'] == value]
+#     anomaly=person_measurements[person_measurements['name_val'] == value]
+#     figure = create_fig_quartiles(anomaly)
+#
+#     return figure
 
 
 
@@ -194,18 +210,18 @@ def update_output(value):
     Output("scanner_history_foot", "figure"),
      Output('graph_foot_mean', 'figure'),
      ],
-    [Input("range-slider", "value"),
-    Input('dropdown', 'value')])
-def update_middle_slider(slider_range,value):
+    [
+        Input("range-slider", "value"),
+    # Input('dropdown', 'value')
+     ])
+def update_middle_slider(slider_range):
     low, current, high = slider_range
 
     global slider_left, slider_middle, slider_right
 
     slider_left, slider_middle, slider_right = slider_range
 
-    mask=person_measurements[person_measurements['name_val'] == value]
-
-    mask = mask[(mask['time'] > low) & (mask['time'] < high)]
+    mask = person_measurements[(person_measurements['time'] > low) & (person_measurements['time'] < high)]
 
     fig = plot_single_figure_six_traces_separately_for_all_foots(mask, current, delta)
 
@@ -219,45 +235,45 @@ def update_middle_slider(slider_range,value):
         Output('range-slider', 'value'),
     ],
     [
+
         Input('scanner_history_foot', 'hoverData'),
         Input('interval-component', 'n_intervals'),
-        Input('dropdown', 'value')
     ])
-def update_foot_image(hoverData, current_intervals,value):
+def update_foot_image(hoverData, current_intervals):
     global slider_middle
     global n_intervals
+
+
     if current_intervals != n_intervals:
         slider_middle += delta
         n_intervals = current_intervals
         if slider_middle > slider_right:
             slider_middle -= delta
     else:
-        try:
+        # try:
+        #     slider_middle = hoverData['points'][0]['x']
+        # except:
+        #     pass
+        if hoverData is not None:
             slider_middle = hoverData['points'][0]['x']
-        except:
-            pass
 
     # maybe should be here delta time
     time = slider_middle
-
-    
-    dt = requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/' + str(value)).json()
-    marker = [dt["trace"]["sensors"][0]["value"] / 1023 * 100, dt["trace"]["sensors"][1]["value"] / 1023 * 100,
-              dt["trace"]["sensors"][2]["value"] / 1023 * 100, dt["trace"]["sensors"][3]["value"] / 1023 * 100,
-              dt["trace"]["sensors"][4]["value"] / 1023 * 100, dt["trace"]["sensors"][5]["value"] / 1023 * 100]
+    print(time)
 
 
-    fig_foot = create_fig_foot(marker)
+    # dt = requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/' + str(value)).json()
+    # marker = [dt["trace"]["sensors"][0]["value"] / 1023 * 100, dt["trace"]["sensors"][1]["value"] / 1023 * 100,
+    #           dt["trace"]["sensors"][2]["value"] / 1023 * 100, dt["trace"]["sensors"][3]["value"] / 1023 * 100,
+    #           dt["trace"]["sensors"][4]["value"] / 1023 * 100, dt["trace"]["sensors"][5]["value"] / 1023 * 100]
+    #
+    # fig_foot = create_fig_foot(marker)
+
+
+    fig_foot = create_fig_foot(person_measurements[person_measurements['time'] == time]['value'].values)
+
 
     return fig_foot, [slider_left, time, slider_right]
-
-
-
-
-
-
-
-
 
 
 
