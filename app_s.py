@@ -12,7 +12,8 @@ from PIL import Image
 
 from prepared_measurements import get_prepared_measurements
 
-from create_fig import create_fig_foot,create_fig_quartiles,plot_single_figure_six_traces_separately_for_all_foots
+from create_fig import create_fig_foot, create_fig_quartiles, plot_single_figure_six_traces_separately_for_all_foots, \
+    plot_single_figure_six_traces_separately
 
 # global valous (to do move to json, for share data )
 measurements_all = get_prepared_measurements()
@@ -25,20 +26,14 @@ anomaly = anomaly[anomaly['anomaly'] == 1]
 
 min_time = min(person_measurements['time'])
 max_time = max(person_measurements['time'])
-step = 0.001
-delta = 0.01
+step = 1
+delta = 0.1
 
 slider_left = min_time
 slider_middle = (max_time - min_time) / 2
 slider_right = max_time
 
 n_intervals = 0
-
-# url = "http://tesla.iem.pw.edu.pl:9080/v2/monitor/2"
-# dt = requests.get(url)
-# dt = dt.json()
-# marker = [dt["trace"]["sensors"][0]["value"]/1023*100, dt["trace"]["sensors"][1]["value"]/1023*100, dt["trace"]["sensors"][2]["value"]/1023*100, dt["trace"]["sensors"][3]["value"]/1023*100, dt["trace"]["sensors"][4]["value"]/1023*100, dt["trace"]["sensors"][5]["value"]/1023*100]
-
 
 img = Image.open('stopki.png')
 
@@ -175,25 +170,6 @@ def update_table(page_current, page_size,value):
            page_current * page_size:(page_current + 1) * page_size
            ].to_dict('records')
 
-
-# @app.callback(
-#     Output('quartiles','figure'),
-#     Input('dropdown', 'value')
-# )
-# def update_table(value):
-#
-#     global current_person
-#     global person_measurements
-#
-#     current_person = value
-#     person_measurements = measurements_all[measurements_all['name_val'] == value]
-#     anomaly=person_measurements[person_measurements['name_val'] == value]
-#     figure = create_fig_quartiles(anomaly)
-#
-#     return figure
-
-
-
 @app.callback(
     Output('interval-component', 'disabled'),
     Input('start-stop', 'value')
@@ -212,9 +188,9 @@ def update_output(value):
      ],
     [
         Input("range-slider", "value"),
-    # Input('dropdown', 'value')
+        Input('dropdown', 'value')
      ])
-def update_middle_slider(slider_range):
+def update_middle_slider(slider_range, name_value):
     low, current, high = slider_range
 
     global slider_left, slider_middle, slider_right
@@ -223,7 +199,7 @@ def update_middle_slider(slider_range):
 
     mask = person_measurements[(person_measurements['time'] > low) & (person_measurements['time'] < high)]
 
-    fig = plot_single_figure_six_traces_separately_for_all_foots(mask, current, delta)
+    fig = plot_single_figure_six_traces_separately(mask, current)
 
     fig_foot_mean = create_fig_foot(mask['value'].mean())
 
@@ -238,17 +214,19 @@ def update_middle_slider(slider_range):
 
         Input('scanner_history_foot', 'hoverData'),
         Input('interval-component', 'n_intervals'),
+        Input('dropdown', 'value'),
+
     ])
-def update_foot_image(hoverData, current_intervals):
+def update_foot_image(hoverData, current_intervals,name_val):
     global slider_middle
     global n_intervals
 
 
     if current_intervals != n_intervals:
-        slider_middle += delta
+        slider_middle += step
         n_intervals = current_intervals
         if slider_middle > slider_right:
-            slider_middle -= delta
+            slider_middle -= step
     else:
         # try:
         #     slider_middle = hoverData['points'][0]['x']
@@ -258,17 +236,14 @@ def update_foot_image(hoverData, current_intervals):
             slider_middle = hoverData['points'][0]['x']
 
     # maybe should be here delta time
+    # if slider_middle == range_slider[1]:
+    #     time = slider_middle
+    # else:
+    #     time = range_slider[1]
+
     time = slider_middle
-    print(time)
 
-
-    # dt = requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/' + str(value)).json()
-    # marker = [dt["trace"]["sensors"][0]["value"] / 1023 * 100, dt["trace"]["sensors"][1]["value"] / 1023 * 100,
-    #           dt["trace"]["sensors"][2]["value"] / 1023 * 100, dt["trace"]["sensors"][3]["value"] / 1023 * 100,
-    #           dt["trace"]["sensors"][4]["value"] / 1023 * 100, dt["trace"]["sensors"][5]["value"] / 1023 * 100]
-    #
-    # fig_foot = create_fig_foot(marker)
-
+    # print(time)
 
     fig_foot = create_fig_foot(person_measurements[person_measurements['time'] == time]['value'].values)
 
