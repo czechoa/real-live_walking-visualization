@@ -1,6 +1,8 @@
 import dash
 from dash import dcc, html, Output, Input, dash_table
 import plotly.graph_objects as go
+from flask import Flask
+
 
 import time
 
@@ -38,7 +40,13 @@ marker = [dt["trace"]["sensors"][0]["value"]/1023*100, dt["trace"]["sensors"][1]
 
 img = Image.open('stopki.png')
 
-app = dash.Dash(__name__)
+server = Flask(__name__)
+app = dash.Dash(__name__,server=server,
+    url_base_pathname='/dash/')
+
+@server.route("/dash")
+def my_dash_app():
+    return app.index()
 
 app.layout = html.Div(children=[
     html.H1(children='Walking visualization', style={'textAlign': 'center'}),
