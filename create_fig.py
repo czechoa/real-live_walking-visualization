@@ -60,7 +60,7 @@ def plot_single_figure_six_traces_separately(df_measurements, current):
                       row=int(i / 3) + 1, col=(i % 3) + 1)
 
         if not point.empty:
-            fig.add_trace(go.Scatter(x=[int(point['time'])], y=[int(point['value'])],
+            fig.add_trace(go.Scatter(x=point['time'].values, y=point['value'].values,
                                  showlegend=False, mode='markers'),
                       row=int(i / 3) + 1, col=(i % 3) + 1)
 
