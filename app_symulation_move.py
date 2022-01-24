@@ -76,7 +76,7 @@ app.layout = html.Div(children=[
             # options=[{'label': i, 'value': i} for i in df['category'].unique()],
             options=[{'label': str(i / 10), 'value': str(i / 10)} for i in range(11)],
 
-            value='0.0'
+            value='1.0'
         ),
 
         html.P("Time:"),
@@ -178,10 +178,10 @@ def update_foot_image(hoverData, current_intervals):
     global slider_middle
     global n_intervals
     if current_intervals != n_intervals:
-        slider_middle += 0.1
+        slider_middle += delta
         n_intervals = current_intervals
         if slider_middle > slider_right:
-            slider_middle -= 0.1
+            slider_middle -= delta
     else:
         # try:
         if hoverData is not None:
