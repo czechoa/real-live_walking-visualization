@@ -12,8 +12,7 @@ from PIL import Image
 
 from prepared_measurements import get_prepared_measurements
 
-from create_fig import create_fig_foot, create_fig_quartiles, plot_single_figure_six_traces_separately_for_all_foots, \
-    plot_single_figure_six_traces_separately
+from create_fig import create_fig_foot, create_fig_quartiles, plot_single_figure_six_traces_separately
 
 # global valous (to do move to json, for share data )
 measurements_all = get_prepared_measurements()
@@ -27,11 +26,14 @@ anomaly = anomaly[anomaly['anomaly'] == 1]
 min_time = min(person_measurements['time'])
 max_time = max(person_measurements['time'])
 step = 1
-delta = 0.1
+speed = 1
+# delta = 0.1
+interval = 1 * 1000 # 1 s
 
 slider_left = min_time
 slider_middle = (max_time - min_time) / 2
 slider_right = max_time
+old_hoverData = 0
 
 n_intervals = 0
 
@@ -68,7 +70,7 @@ app.layout = html.Div(children=[
     html.H1(children='Patterns:'),
     dcc.Graph(
         id='scanner_history_foot',
-        figure=plot_single_figure_six_traces_separately_for_all_foots(person_measurements, slider_middle, delta),
+        figure=plot_single_figure_six_traces_separately(person_measurements, slider_middle),
 
     ),
     html.H1(children='Visualization:'),
@@ -102,7 +104,7 @@ app.layout = html.Div(children=[
         'Speed simulations',
         dcc.Dropdown(
             id='speed',
-            options=[{'label': str(i / 10), 'value': str(i / 10)} for i in range(11)],
+            options=[{'label': str(i/10), 'value': str(i/10)} for i in range(21)],
 
             value='1.0'
         ),
@@ -116,13 +118,13 @@ app.layout = html.Div(children=[
             allowCross=False,
             tooltip={"placement": "bottom", "always_visible": True},
 
-            pushable= delta
+            pushable= step
         ),
         "Anomaly table",
         dash_table.DataTable(
             id='datatable-paging-page-count',
             columns=[
-                {"name": i, "id": i} for i in anomaly.columns
+                {"name": i, "id": i} for i in anomaly.columns[[1,10,11]]
             ],
             page_current=0,
             page_size=6,
@@ -132,7 +134,7 @@ app.layout = html.Div(children=[
         ),
         dcc.Graph(
             id='quartiles',
-            figure=create_fig_quartiles(measurements_all),
+            figure=create_fig_quartiles(person_measurements),
             style={'width': '90vh', 'height': '60vh'}
         ),
 
@@ -143,7 +145,7 @@ app.layout = html.Div(children=[
 
     dcc.Interval(
         id='interval-component',
-        interval=1 * 1000,  # in milliseconds
+        interval= interval,  # in milliseconds
         n_intervals=0,
         disabled=True
     ),
@@ -152,9 +154,11 @@ app.layout = html.Div(children=[
 
 @app.callback(
     Output('datatable-paging-page-count', 'data'),
+    Output('quartiles', 'figure'),
     Input('datatable-paging-page-count', "page_current"),
     Input('datatable-paging-page-count', "page_size"),
     Input('dropdown', 'value')
+
 )
 def update_table(page_current, page_size,value):
     global current_person
@@ -167,18 +171,24 @@ def update_table(page_current, page_size,value):
     anomaly = anomaly[anomaly['anomaly'] == 1]
 
     return anomaly.iloc[
-           page_current * page_size:(page_current + 1) * page_size
-           ].to_dict('records')
+           page_current * page_size:(page_current + 1) * page_size,
+           ].to_dict('records') ,create_fig_quartiles(person_measurements)
 
 @app.callback(
-    Output('interval-component', 'disabled'),
-    Input('start-stop', 'value')
+    [
+        Output('interval-component', 'disabled'),
+        Output('interval-component', 'interval')
+     ],
+    Input('start-stop', 'value'),
+    Input('speed','value')
+
 )
-def update_output(value):
-    if value == 'start':
-        return False
+def update_output(start_stop, speed):
+    speed = float(speed)
+    if start_stop == 'start':
+        return False, interval /  speed
     else:
-        return True
+        return True, interval / speed
 
 
 @app.callback(
@@ -193,9 +203,6 @@ def update_output(value):
 def update_middle_slider(slider_range, name_value):
     low, current, high = slider_range
 
-    global slider_left, slider_middle, slider_right
-
-    slider_left, slider_middle, slider_right = slider_range
 
     mask = person_measurements[(person_measurements['time'] > low) & (person_measurements['time'] < high)]
 
@@ -215,12 +222,16 @@ def update_middle_slider(slider_range, name_value):
         Input('scanner_history_foot', 'hoverData'),
         Input('interval-component', 'n_intervals'),
         Input('dropdown', 'value'),
+        Input("range-slider", "value"),
 
     ])
-def update_foot_image(hoverData, current_intervals,name_val):
+def update_foot_image(hoverData, current_intervals,name_val, ranger_slider):
     global slider_middle
-    global n_intervals
+    global slider_right
+    global slider_left
 
+    global n_intervals
+    global  old_hoverData
 
     if current_intervals != n_intervals:
         slider_middle += step
@@ -228,22 +239,15 @@ def update_foot_image(hoverData, current_intervals,name_val):
         if slider_middle > slider_right:
             slider_middle -= step
     else:
-        # try:
-        #     slider_middle = hoverData['points'][0]['x']
-        # except:
-        #     pass
-        if hoverData is not None:
+        if hoverData is not None and old_hoverData != hoverData['points'][0]['x']:
             slider_middle = hoverData['points'][0]['x']
-
-    # maybe should be here delta time
-    # if slider_middle == range_slider[1]:
-    #     time = slider_middle
-    # else:
-    #     time = range_slider[1]
+            old_hoverData = hoverData['points'][0]['x']
+        else:
+            slider_middle = ranger_slider[1]
+            slider_right = ranger_slider[2]
+            slider_left = ranger_slider[0]
 
     time = slider_middle
-
-    # print(time)
 
     fig_foot = create_fig_foot(person_measurements[person_measurements['time'] == time]['value'].values)
 
