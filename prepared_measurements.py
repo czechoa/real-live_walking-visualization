@@ -11,8 +11,6 @@ def normalised_column_value(df):
 def get_prepared_measurements():
     con = sqlite3.connect("proj.db")
 
-    tmp_last_name = "Grzegorczyk"
-
     df_all_measurement = pd.read_sql_query("SELECT * from measurements", con)  # this moment it is one person
 
     conditions = [
@@ -29,8 +27,7 @@ def get_prepared_measurements():
 
     df_all_measurement['value'] = normalised_column_value(df_all_measurement)
 
-    # df_all_measurement['time'] = (df_all_measurement['time'] - min(df_all_measurement['time'])) / (
-    #         max(df_all_measurement['time']) - min(df_all_measurement['time']))
+
     df_all_measurement['time'] = (df_all_measurement['time'] - min(df_all_measurement['time'])).astype(int)
 
 

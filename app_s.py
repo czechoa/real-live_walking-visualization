@@ -1,20 +1,20 @@
 import dash
 from dash import dcc, html, Output, Input, dash_table
-import plotly.graph_objects as go
 from flask import Flask
-
-
-import time
-
-import requests
-
+from time import sleep
 from PIL import Image
 
+from live_read_data import DeviceThread
 from prepared_measurements import get_prepared_measurements
 
 from create_fig import create_fig_foot, create_fig_quartiles, plot_single_figure_six_traces_separately
 
+thread = DeviceThread()
+thread.start()
+sleep(10)
+
 # global valous (to do move to json, for share data )
+
 measurements_all = get_prepared_measurements()
 current_person = 1
 person_measurements = measurements_all
@@ -27,7 +27,6 @@ min_time = min(person_measurements['time'])
 max_time = max(person_measurements['time'])
 step = 1
 speed = 1
-# delta = 0.1
 interval = 1 * 1000 # 1 s
 
 slider_left = min_time
@@ -38,6 +37,10 @@ old_hoverData = 0
 n_intervals = 0
 
 img = Image.open('stopki.png')
+
+
+
+
 
 server = Flask(__name__)
 app = dash.Dash(__name__,server=server,
@@ -167,8 +170,7 @@ def update_table(page_current, page_size,value):
     current_person = value
     person_measurements = measurements_all[measurements_all['name_val'] == value]
 
-    anomaly = person_measurements[person_measurements['name_val'] == value]
-    anomaly = anomaly[anomaly['anomaly'] == 1]
+    anomaly = person_measurements[person_measurements['anomaly'] == 1]
 
     return anomaly.iloc[
            page_current * page_size:(page_current + 1) * page_size,
@@ -216,6 +218,7 @@ def update_middle_slider(slider_range, name_value):
     [
         Output('graph_foot', 'figure'),
         Output('range-slider', 'value'),
+        Output('range-slider', 'max'),
     ],
     [
 
@@ -232,16 +235,28 @@ def update_foot_image(hoverData, current_intervals,name_val, ranger_slider):
 
     global n_intervals
     global  old_hoverData
+    global measurements_all
+    global person_measurements
+    global max_time
 
     if current_intervals != n_intervals:
+
+        measurements_all = get_prepared_measurements()
+        person_measurements = measurements_all[measurements_all['name_val'] == current_person]
+        max_time = max(person_measurements['time'])
+
         slider_middle += step
         n_intervals = current_intervals
+
         if slider_middle > slider_right:
             slider_middle -= step
+
     else:
+
         if hoverData is not None and old_hoverData != hoverData['points'][0]['x']:
             slider_middle = hoverData['points'][0]['x']
             old_hoverData = hoverData['points'][0]['x']
+
         else:
             slider_middle = ranger_slider[1]
             slider_right = ranger_slider[2]
@@ -252,7 +267,7 @@ def update_foot_image(hoverData, current_intervals,name_val, ranger_slider):
     fig_foot = create_fig_foot(person_measurements[person_measurements['time'] == time]['value'].values)
 
 
-    return fig_foot, [slider_left, time, slider_right]
+    return fig_foot, [slider_left, time, slider_right], max_time
 
 
 
