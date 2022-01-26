@@ -11,7 +11,7 @@ from create_fig import create_fig_foot, create_fig_quartiles, plot_single_figure
 
 thread = DeviceThread()
 thread.start()
-sleep(10)
+sleep(5)
 
 # global valous (to do move to json, for share data )
 
@@ -37,9 +37,6 @@ old_hoverData = 0
 n_intervals = 0
 
 img = Image.open('stopki.png')
-
-
-
 
 
 server = Flask(__name__)
@@ -248,8 +245,8 @@ def update_foot_image(hoverData, current_intervals,name_val, ranger_slider):
         slider_middle += step
         n_intervals = current_intervals
 
-        if slider_middle > slider_right:
-            slider_middle -= step
+        if slider_middle == slider_right and slider_right < max_time:
+            slider_right += step
 
     else:
 

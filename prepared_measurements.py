@@ -28,7 +28,7 @@ def get_prepared_measurements():
     df_all_measurement['value'] = normalised_column_value(df_all_measurement)
 
 
-    df_all_measurement['time'] = (df_all_measurement['time'] - min(df_all_measurement['time'])).astype(int)
+    df_all_measurement['time'] = (df_all_measurement['time'] - int(min(df_all_measurement['time']))).astype(int)
 
 
 
@@ -36,6 +36,9 @@ def get_prepared_measurements():
 
 
     return person_measurements
-
+# %%
+data = get_prepared_measurements()
+data = data[data['name_val'] == 1]
+sensor = data[data['name'] == 'L0']
 
 

@@ -17,15 +17,15 @@ class DeviceThread(Thread):
     def run(self):
         self.running = True
         while self.running:
-            # start_all = time()
+            start = time()
             measurements = grab_one_serie_for_all_person()
             measurements.to_sql('measurements', con=self.conn, if_exists='append')
-            # print(measurements)
-            start = time()
-            while time() - start < 0.2:
+            while time() - start < 1:
                 pass
-            # print(time() -start_all)
-
 
 # %%
+
+thread = DeviceThread()
+thread.start()
+
 
