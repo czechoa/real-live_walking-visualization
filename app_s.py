@@ -77,13 +77,13 @@ app.layout = html.Div(children=[
     html.Div([
         dcc.Graph(
             id='graph_foot',
-            figure=create_fig_foot(person_measurements.iloc[-6:, -1]),
+            figure=create_fig_foot(person_measurements.iloc[-6:, -1],'blue'),
             style={'width': '90vh', 'height': '70vh'}
         ),
         'mean value',
         dcc.Graph(
             id='graph_foot_mean',
-            figure=create_fig_foot(person_measurements.iloc[-6:, -1]),
+            figure=create_fig_foot(person_measurements.iloc[-6:, -1],'blue'),
             style={'width': '90vh', 'height': '70vh'}
         ),
 
@@ -207,7 +207,7 @@ def update_middle_slider(slider_range, name_value):
 
     fig = plot_single_figure_six_traces_separately(mask, current)
 
-    fig_foot_mean = create_fig_foot(mask['value'].mean())
+    fig_foot_mean = create_fig_foot(mask['value'].mean(),'blue')
 
     return fig,fig_foot_mean
 
@@ -261,7 +261,12 @@ def update_foot_image(hoverData, current_intervals,name_val, ranger_slider):
 
     time = slider_middle
 
-    fig_foot = create_fig_foot(person_measurements[person_measurements['time'] == time]['value'].values)
+    is_an=any(person_measurements[person_measurements['time'] == time]['anomaly'].values ==1 )
+    if is_an:
+        fig_foot = create_fig_foot(person_measurements[person_measurements['time'] == time]['value'].values,'red')
+    else:
+        fig_foot = create_fig_foot(person_measurements[person_measurements['time'] == time]['value'].values, 'blue')
+
 
 
     return fig_foot, [slider_left, time, slider_right], max_time

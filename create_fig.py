@@ -85,14 +85,16 @@ def create_fig_quartiles(person_measurements: pd.DataFrame):
     return fig_quartiles
 
 
-def create_fig_foot(marker_size):
+def create_fig_foot(marker_size,color):
     img = Image.open('stopki.png')
 
     fig_foot = go.Figure(data=[go.Scatter(
         x=[3.5, 1, 3, 6.5, 9, 7],
         y=[7, 6, 1.5, 7, 6, 1.5],
         mode='markers',
+        marker_color=color,
         marker_size=marker_size
+
     )],
     )
 
