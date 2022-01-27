@@ -5,40 +5,6 @@ import plotly.express as px
 import pandas as pd
 
 
-# def plot_single_figure_six_traces_separately_for_all_foots(df_measurements, current, delta):
-#     title = str(df_measurements['firstname'].unique() + ' ' + df_measurements['lastname'].unique())
-#
-#     fig = make_subplots(rows=2, cols=3, start_cell="bottom-left", shared_xaxes=True, shared_yaxes=True,
-#                         subplot_titles=df_measurements['name'].unique(), x_title='time', y_title='value')
-#
-#     for i in range(6):
-#         point = \
-#             df_measurements[
-#                 ((df_measurements['time'] > (current - delta)) & (df_measurements['time'] < (current + delta))) & (
-#                         df_measurements['id_sensor'] == i)].iloc[
-#                 -1]
-#         fig.add_trace(go.Scatter(x=df_measurements[df_measurements['id_sensor'] == i]['time'],
-#                                  y=df_measurements[df_measurements['id_sensor'] == i]['value'],
-#                                  showlegend=False, mode='lines'),
-#                       row=int(i / 3) + 1, col=(i % 3) + 1)
-#
-#         # fig.add_trace(go.Scatter(x= y=df_measurements[df_measurements['id_sensor'] == i]['value'], showlegend=False),
-#         #               row=int(i / 3) + 1, col=(i % 3) + 1)
-#
-#         fig.add_trace(go.Scatter(x=[point['time']], y=[point['value']],
-#                                  showlegend=False, mode='markers'),
-#                       row=int(i / 3) + 1, col=(i % 3) + 1)
-#
-#     fig.update_layout(
-#         title={
-#             'text': title[2:-2],
-#             'y': 0.9,
-#             'x': 0.5,
-#             'xanchor': 'center',
-#             'yanchor': 'top'})
-#
-#     return fig
-
 def plot_single_figure_six_traces_separately(df_measurements, current):
     title = str(df_measurements['firstname'].unique() + ' ' + df_measurements['lastname'].unique())
 
@@ -51,18 +17,17 @@ def plot_single_figure_six_traces_separately(df_measurements, current):
             df_measurements[
                 (df_measurements['time'] == current) & (df_measurements['id_sensor'] == i)]
 
-
         sensor = df_measurements[df_measurements['id_sensor'] == i]
 
-        fig.add_trace(go.Scatter(x= sensor['time'],
+        fig.add_trace(go.Scatter(x=sensor['time'],
                                  y=sensor['value'],
                                  showlegend=False, mode='lines'),
                       row=int(i / 3) + 1, col=(i % 3) + 1)
 
         if not point.empty:
             fig.add_trace(go.Scatter(x=point['time'].values, y=point['value'].values,
-                                 showlegend=False, mode='markers'),
-                      row=int(i / 3) + 1, col=(i % 3) + 1)
+                                     showlegend=False, mode='markers'),
+                          row=int(i / 3) + 1, col=(i % 3) + 1)
 
     fig.update_layout(
         title={
@@ -85,7 +50,7 @@ def create_fig_quartiles(person_measurements: pd.DataFrame):
     return fig_quartiles
 
 
-def create_fig_foot(marker_size,color):
+def create_fig_foot(marker_size, color):
     img = Image.open('stopki.png')
 
     fig_foot = go.Figure(data=[go.Scatter(
