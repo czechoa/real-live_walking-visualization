@@ -52,7 +52,6 @@ while delta < 10* 60: # 10 minunts
     stop = time()
     delta = stop - start
 
-    print(delta)    # this procedure take  1 s
 
     sleep(0.2)
 
