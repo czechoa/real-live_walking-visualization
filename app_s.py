@@ -24,7 +24,7 @@ def my_dash_app():
 # if __name__ == '__main__':
 #     app.run_server(debug=True)
 
-print('before thread')
+print('before thread \n')
 thread = DeviceThread()
 thread.start()
 sleep(10)
@@ -42,7 +42,7 @@ anomaly = anomaly[anomaly['anomaly'] == 1]
 min_time = min(person_measurements['time'])
 max_time = max(person_measurements['time'])
 step = 1
-speed = 1
+# speed = 1
 interval = 1 * 1000 # 1 s
 
 slider_left = min_time
@@ -160,19 +160,20 @@ app.layout = html.Div(children=[
 ])
 
 
-@app.callback(
+@app.callback([
     Output('datatable-paging-page-count', 'data'),
     Output('quartiles', 'figure'),
-    Input('datatable-paging-page-count', "page_current"),
+    ],
+
+    [Input('datatable-paging-page-count', "page_current"),
     Input('datatable-paging-page-count', "page_size"),
-    Input('dropdown', 'value'),
-    Input('interval-component', 'n_intervals'),
+    Input('dropdown', 'value') ]
 
 )
-def update_table(page_current, page_size,value, n_intervals):
+def update_table(page_current, page_size,value):
     global current_person
     global person_measurements
-    print('value',value)
+    print('\n',value)
     current_person = value
     person_measurements = measurements_all[measurements_all['name_val'] == value]
 
@@ -183,40 +184,40 @@ def update_table(page_current, page_size,value, n_intervals):
            ].to_dict('records') ,create_fig_quartiles(person_measurements)
 
 @app.callback(
-    [
-        Output('interval-component', 'disabled'),
-        Output('interval-component', 'interval')
-     ],
+
+    Output('interval-component', 'disabled'),
+    Output('interval-component', 'interval'),
+
     Input('start-stop', 'value'),
     Input('speed','value')
 
 )
-def update_output(start_stop, speed):
+def update_output(start_stop,speed):
     speed = float(speed)
     if start_stop == 'start':
-        return False, interval /  speed
+        return False, interval / speed
     else:
         return True, interval / speed
-
 
 @app.callback(
     [
     Output("scanner_history_foot", "figure"),
-     Output('graph_foot_mean', 'figure'),
-     ],
+    Output('graph_foot_mean', 'figure'),
+    ],
     [
         Input("range-slider", "value"),
         Input('dropdown', 'value')
      ])
-def update_middle_slider(slider_range, name_value):
+def update_fig_foot(slider_range, name_value):
     low, current, high = slider_range
-
 
     mask = person_measurements[(person_measurements['time'] > low) & (person_measurements['time'] < high)]
 
     fig = plot_single_figure_six_traces_separately(mask, current)
 
     fig_foot_mean = create_fig_foot(mask['value'].mean(),'blue')
+
+    qualities = create_fig_quartiles(mask),
 
     return fig,fig_foot_mean
 
@@ -246,27 +247,35 @@ def update_foot_image(hoverData, current_intervals,name_val, ranger_slider):
     global max_time
 
     if current_intervals != n_intervals:
-
         measurements_all = get_prepared_measurements()
         person_measurements = measurements_all[measurements_all['name_val'] == current_person]
         max_time = max(person_measurements['time'])
 
-        slider_middle += step
+        if slider_middle < max_time:
+            slider_middle += step
+
         n_intervals = current_intervals
 
-        if slider_middle == slider_right and slider_right < max_time:
+        if slider_middle == slider_right -1 and slider_right <= max_time:
             slider_right += step
 
     else:
 
         if hoverData is not None and old_hoverData != hoverData['points'][0]['x']:
+
             slider_middle = hoverData['points'][0]['x']
             old_hoverData = hoverData['points'][0]['x']
 
-        else:
+        elif slider_middle != ranger_slider[1]:
             slider_middle = ranger_slider[1]
-            slider_right = ranger_slider[2]
+
+        if slider_left != ranger_slider[0]:
             slider_left = ranger_slider[0]
+
+        if slider_right != ranger_slider[2]:
+            slider_right = ranger_slider[2]
+
+
 
     time = slider_middle
 
