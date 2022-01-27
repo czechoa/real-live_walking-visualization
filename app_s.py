@@ -9,28 +9,20 @@ from prepared_measurements import get_prepared_measurements
 
 from create_fig import create_fig_foot, create_fig_quartiles, plot_single_figure_six_traces_separately
 
-
-
-
 server = Flask(__name__)
-app = dash.Dash(__name__,server=server,
-    url_base_pathname='/dash/')
+app = dash.Dash(__name__, server=server,
+                url_base_pathname='/dash/')
+
 
 @server.route("/dash")
 def my_dash_app():
-
     return app.index()
 
-# if __name__ == '__main__':
-#     app.run_server(debug=True)
 
-print('before thread \n')
 thread = DeviceThread()
 thread.start()
 sleep(10)
-# sleep(10)
-# global valous (to do move to json, for share data )
-print('data')
+
 measurements_all = get_prepared_measurements()
 current_person = 1
 person_measurements = measurements_all
@@ -38,12 +30,10 @@ person_measurements = measurements_all
 anomaly = person_measurements[person_measurements['name_val'] == current_person]
 anomaly = anomaly[anomaly['anomaly'] == 1]
 
-
 min_time = min(person_measurements['time'])
 max_time = max(person_measurements['time'])
 step = 1
-# speed = 1
-interval = 1 * 1000 # 1 s
+interval = 1 * 1000  # 1 s
 
 slider_left = min_time
 slider_middle = (max_time - min_time) / 2
@@ -54,12 +44,10 @@ n_intervals = 0
 
 img = Image.open('stopki.png')
 
-
 app.layout = html.Div(children=[
     html.H1(children='Walking visualization', style={'textAlign': 'center'}),
 
     html.Div(children='Andrzej Czechowki, Karol Kociołek', style={'textAlign': 'center'}),
-
 
     html.H1(children='Person'),
 
@@ -85,13 +73,13 @@ app.layout = html.Div(children=[
     html.Div([
         dcc.Graph(
             id='graph_foot',
-            figure=create_fig_foot(person_measurements.iloc[-6:, -1],'blue'),
+            figure=create_fig_foot(person_measurements.iloc[-6:, -1], 'blue'),
             style={'width': '90vh', 'height': '70vh'}
         ),
         'mean value',
         dcc.Graph(
             id='graph_foot_mean',
-            figure=create_fig_foot(person_measurements.iloc[-6:, -1],'blue'),
+            figure=create_fig_foot(person_measurements.iloc[-6:, -1], 'blue'),
             style={'width': '90vh', 'height': '70vh'}
         ),
 
@@ -112,7 +100,7 @@ app.layout = html.Div(children=[
         'Speed simulations',
         dcc.Dropdown(
             id='speed',
-            options=[{'label': str(i/10), 'value': str(i/10)} for i in range(21)],
+            options=[{'label': str(i / 10), 'value': str(i / 10)} for i in range(21)],
 
             value='1.0'
         ),
@@ -126,13 +114,13 @@ app.layout = html.Div(children=[
             allowCross=False,
             tooltip={"placement": "bottom", "always_visible": True},
 
-            pushable= step
+            pushable=step
         ),
         "Anomaly table",
         dash_table.DataTable(
             id='datatable-paging-page-count',
             columns=[
-                {"name": i, "id": i} for i in anomaly.columns[[1,10,11]]
+                {"name": i, "id": i} for i in anomaly.columns[[1, 10, 11]]
             ],
             page_current=0,
             page_size=6,
@@ -153,7 +141,7 @@ app.layout = html.Div(children=[
 
     dcc.Interval(
         id='interval-component',
-        interval= interval,  # in milliseconds
+        interval=interval,  # in milliseconds
         n_intervals=0,
         disabled=True
     ),
@@ -163,25 +151,27 @@ app.layout = html.Div(children=[
 @app.callback([
     Output('datatable-paging-page-count', 'data'),
     Output('quartiles', 'figure'),
-    ],
+],
 
     [Input('datatable-paging-page-count', "page_current"),
-    Input('datatable-paging-page-count', "page_size"),
-    Input('dropdown', 'value') ]
+     Input('datatable-paging-page-count', "page_size"),
+     Input('dropdown', 'value'),
+     Input('interval-component', 'n_intervals'),
+
+     ]
 
 )
-def update_table(page_current, page_size,value):
+def update_table(page_current, page_size, value, n_intervals):
     global current_person
     global person_measurements
-    print('\n',value)
     current_person = value
     person_measurements = measurements_all[measurements_all['name_val'] == value]
 
     anomaly = person_measurements[person_measurements['anomaly'] == 1]
-    print('anomaly',anomaly)
     return anomaly.iloc[
            page_current * page_size:(page_current + 1) * page_size,
-           ].to_dict('records') ,create_fig_quartiles(person_measurements)
+           ].to_dict('records'), create_fig_quartiles(person_measurements)
+
 
 @app.callback(
 
@@ -189,25 +179,26 @@ def update_table(page_current, page_size,value):
     Output('interval-component', 'interval'),
 
     Input('start-stop', 'value'),
-    Input('speed','value')
+    Input('speed', 'value')
 
 )
-def update_output(start_stop,speed):
+def update_output(start_stop, speed):
     speed = float(speed)
     if start_stop == 'start':
         return False, interval / speed
     else:
         return True, interval / speed
 
+
 @app.callback(
     [
-    Output("scanner_history_foot", "figure"),
-    Output('graph_foot_mean', 'figure'),
+        Output("scanner_history_foot", "figure"),
+        Output('graph_foot_mean', 'figure'),
     ],
     [
         Input("range-slider", "value"),
         Input('dropdown', 'value')
-     ])
+    ])
 def update_fig_foot(slider_range, name_value):
     low, current, high = slider_range
 
@@ -215,11 +206,10 @@ def update_fig_foot(slider_range, name_value):
 
     fig = plot_single_figure_six_traces_separately(mask, current)
 
-    fig_foot_mean = create_fig_foot(mask['value'].mean(),'blue')
+    fig_foot_mean = create_fig_foot(mask['value'].mean(), 'blue')
 
-    qualities = create_fig_quartiles(mask),
+    return fig, fig_foot_mean
 
-    return fig,fig_foot_mean
 
 @app.callback(
     [
@@ -235,13 +225,13 @@ def update_fig_foot(slider_range, name_value):
         Input("range-slider", "value"),
 
     ])
-def update_foot_image(hoverData, current_intervals,name_val, ranger_slider):
+def update_foot_image(hoverData, current_intervals, name_val, ranger_slider):
     global slider_middle
     global slider_right
     global slider_left
 
     global n_intervals
-    global  old_hoverData
+    global old_hoverData
     global measurements_all
     global person_measurements
     global max_time
@@ -256,7 +246,7 @@ def update_foot_image(hoverData, current_intervals,name_val, ranger_slider):
 
         n_intervals = current_intervals
 
-        if slider_middle == slider_right -1 and slider_right <= max_time:
+        if slider_middle == slider_right and slider_right <= max_time:
             slider_right += step
 
     else:
@@ -275,19 +265,12 @@ def update_foot_image(hoverData, current_intervals,name_val, ranger_slider):
         if slider_right != ranger_slider[2]:
             slider_right = ranger_slider[2]
 
-
-
     time = slider_middle
 
-    is_an=any(person_measurements[person_measurements['time'] == time]['anomaly'].values ==1 )
+    is_an = any(person_measurements[person_measurements['time'] == time]['anomaly'].values == 1)
     if is_an:
-        fig_foot = create_fig_foot(person_measurements[person_measurements['time'] == time]['value'].values,'red')
+        fig_foot = create_fig_foot(person_measurements[person_measurements['time'] == time]['value'].values, 'red')
     else:
         fig_foot = create_fig_foot(person_measurements[person_measurements['time'] == time]['value'].values, 'blue')
 
-
-
     return fig_foot, [slider_left, time, slider_right], max_time
-
-
-
