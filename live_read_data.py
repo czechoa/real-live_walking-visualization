@@ -7,6 +7,7 @@ from read_data import grab_one_serie_for_all_person
 
 class DeviceThread(Thread):
     def __init__(self):
+        print('start thread')
         self.conn = sqlite3.connect('proj.db', check_same_thread=False)
         self.cur = self.conn.cursor()
         self.cur.execute("DROP TABLE IF EXISTS measurements")
@@ -22,10 +23,6 @@ class DeviceThread(Thread):
             measurements.to_sql('measurements', con=self.conn, if_exists='append')
             while time() - start < 1:
                 pass
-
-# %%
-
-thread = DeviceThread()
-thread.start()
+            # print(int(measurements[(measurements['firstname'] == 'Janek') & (measurements['name'] == 'L0') ]['time']))
 
 

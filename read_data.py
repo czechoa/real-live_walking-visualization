@@ -6,9 +6,9 @@ import json
 def get_text_measurments_patient( patient_id: int):
     return requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/'+str(patient_id)).json()
 
-def get_text_measurments_patient_for_all_patient( ):
-    return [requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/'+str(patient_id)).json() for patient_id in range(1,7)]
-
+# def get_text_measurments_patient_for_all_patient( ):
+#     return [requests.get('http://tesla.iem.pw.edu.pl:9080/v2/monitor/'+str(patient_id)).json() for patient_id in range(1,7)]
+#
 
 def grab_a_serie_of_measurment(id, measurments = []):
     stud_obj = get_text_measurments_patient(id)
@@ -48,13 +48,13 @@ def grab_one_serie_for_all_person():
 
     return df_measurements
 
-def grab_one_serie(id):
-    measurments = grab_a_serie_of_measurment(id)
-    df_measurements = convert_measurments_to_df(measurments)
-    return df_measurements
+# def grab_one_serie(id):
+#     measurments = grab_a_serie_of_measurment(id)
+#     df_measurements = convert_measurments_to_df(measurments)
+#     return df_measurements
 # %%
-import  time
-start = time.time()
-result = grab_one_serie_for_all_person()
-print(time.time() - start)
+# import  time
+# start = time.time()
+# result = grab_one_serie_for_all_person()
+# print(time.time() - start)
 

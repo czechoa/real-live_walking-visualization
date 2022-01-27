@@ -9,12 +9,28 @@ from prepared_measurements import get_prepared_measurements
 
 from create_fig import create_fig_foot, create_fig_quartiles, plot_single_figure_six_traces_separately
 
+
+
+
+server = Flask(__name__)
+app = dash.Dash(__name__,server=server,
+    url_base_pathname='/dash/')
+
+@server.route("/dash")
+def my_dash_app():
+
+    return app.index()
+
+# if __name__ == '__main__':
+#     app.run_server(debug=True)
+
+print('before thread')
 thread = DeviceThread()
 thread.start()
-sleep(5)
-
+sleep(10)
+# sleep(10)
 # global valous (to do move to json, for share data )
-
+print('data')
 measurements_all = get_prepared_measurements()
 current_person = 1
 person_measurements = measurements_all
@@ -38,14 +54,6 @@ n_intervals = 0
 
 img = Image.open('stopki.png')
 
-
-server = Flask(__name__)
-app = dash.Dash(__name__,server=server,
-    url_base_pathname='/dash/')
-
-@server.route("/dash")
-def my_dash_app():
-    return app.index()
 
 app.layout = html.Div(children=[
     html.H1(children='Walking visualization', style={'textAlign': 'center'}),
@@ -157,18 +165,19 @@ app.layout = html.Div(children=[
     Output('quartiles', 'figure'),
     Input('datatable-paging-page-count', "page_current"),
     Input('datatable-paging-page-count', "page_size"),
-    Input('dropdown', 'value')
+    Input('dropdown', 'value'),
+    Input('interval-component', 'n_intervals'),
 
 )
-def update_table(page_current, page_size,value):
+def update_table(page_current, page_size,value, n_intervals):
     global current_person
     global person_measurements
-
+    print('value',value)
     current_person = value
     person_measurements = measurements_all[measurements_all['name_val'] == value]
 
     anomaly = person_measurements[person_measurements['anomaly'] == 1]
-
+    print('anomaly',anomaly)
     return anomaly.iloc[
            page_current * page_size:(page_current + 1) * page_size,
            ].to_dict('records') ,create_fig_quartiles(person_measurements)
@@ -273,7 +282,3 @@ def update_foot_image(hoverData, current_intervals,name_val, ranger_slider):
 
 
 
-
-
-if __name__ == '__main__':
-    app.run_server(debug=True)

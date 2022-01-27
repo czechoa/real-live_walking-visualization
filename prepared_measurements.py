@@ -36,9 +36,7 @@ def get_prepared_measurements():
 
 
     return person_measurements
+
 # %%
-data = get_prepared_measurements()
-data = data[data['name_val'] == 1]
-sensor = data[data['name'] == 'L0']
 
-
+# data =get_prepared_measurements()

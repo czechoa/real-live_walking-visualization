@@ -2,7 +2,7 @@ import requests
 import sqlite3
 import json
 from time import time,ctime,sleep
-from read_data import grab_one_serie, grab_one_serie_for_all_person
+from read_data import grab_one_serie_for_all_person
 
 url = "http://tesla.iem.pw.edu.pl:9080/v2/monitor/2"
 dt = requests.get(url)
