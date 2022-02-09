@@ -1,10 +1,3 @@
----
-author:
-- 'Karol Kociołek, Andrzej Czechowski'
-date: '01.2022'
-title: 'Final project 2020Z - User manual - Walking visualization'
----
-
 ![image](dash.png)\
 
 Run app
