@@ -5,7 +5,7 @@ date: '01.2022'
 title: 'Final project 2020Z - User manual - Walking visualization'
 ---
 
-![image](code_latex/dash.png)\
+![image](dash.png)\
 
 Run app
 =======
